@@ -1,38 +1,44 @@
 <?php
 
-use function Livewire\Volt\{state, rules, computed};
+use function Livewire\Volt\{state, mount, rules};
 use App\Models\Memo;
 
 state([
+    'memo' => null,
     'title' => '',
     'body' => '',
 ]);
+
+mount(function (Memo $memo) {
+    $this->memo = $memo;
+    $this->title = $memo->title;
+    $this->body = $memo->body;
+});
 
 rules([
     'title' => ['required', 'string', 'max:50'],
     'body' => ['required', 'string', 'max:2000'],
 ]);
 
-$save = function () {
+$update = function () {
     $validated = $this->validate();
 
-    $memo = new Memo();
-    $memo->user_id = auth()->id();
-    $memo->title = $validated['title'];
-    $memo->body = $validated['body'];
-    $memo->save();
+    $this->memo->update([
+        'title' => $validated['title'],
+        'body' => $validated['body'],
+    ]);
 
-    $this->redirect(route('memos.show', $memo));
+    $this->redirect(route('memos.show', $this->memo));
 };
 
 $cancel = function () {
-    $this->redirect(route('memos.index'));
+    $this->redirect(route('memos.show', $this->memo));
 };
 
 ?>
 
 <div class="max-w-2xl mx-auto p-4 sm:p-6 lg:p-8">
-    <form wire:submit="save" class="space-y-4">
+    <form wire:submit="update" class="space-y-4">
         <div>
             <label for="title" class="block text-sm font-medium text-gray-700">
                 タイトル
@@ -64,7 +70,7 @@ $cancel = function () {
             </button>
             <button type="submit"
                 class="inline-flex items-center px-4 py-2 bg-indigo-600 border border-transparent rounded-md font-semibold text-xs text-white uppercase tracking-widest hover:bg-indigo-700 focus:bg-indigo-700 active:bg-indigo-900 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 transition ease-in-out duration-150">
-                保存
+                更新
             </button>
         </div>
     </form>
